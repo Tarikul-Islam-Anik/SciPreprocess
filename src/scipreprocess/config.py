@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Tuple
 
 
 @dataclass
 class PipelineConfig:
     """Configuration for the document preprocessing pipeline.
-    
+
     Attributes:
         use_layout: Enable layout analysis (requires OpenCV).
         use_ocr: Enable OCR for scanned documents (requires pytesseract).
@@ -19,11 +18,11 @@ class PipelineConfig:
         embedding_model: Name of the sentence-transformer model.
         chunk_target_sentences: Min and max sentences per chunk.
     """
+
     use_layout: bool = False
     use_ocr: bool = False
     use_spacy: bool = True
     use_semantic_embeddings: bool = False
-    spacy_model: str = 'en_core_web_sm'
-    embedding_model: str = 'sentence-transformers/all-MiniLM-L6-v2'
-    chunk_target_sentences: Tuple[int, int] = (3, 8)
-
+    spacy_model: str = "en_core_web_sm"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    chunk_target_sentences: tuple[int, int] = (3, 8)
