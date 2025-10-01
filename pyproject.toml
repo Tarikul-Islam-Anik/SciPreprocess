@@ -1,0 +1,110 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scipreprocess"
+version = "0.1.0"
+description = "A modular pipeline for preprocessing scientific documents (PDF, DOCX, TEX, XML, TXT)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Tarikul Islam Anik", email = "contact@oxyzen.dev"}
+]
+keywords = ["scientific", "preprocessing", "nlp", "pdf", "documents"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Text Processing",
+]
+
+dependencies = [
+    "unidecode>=1.3.0",
+]
+
+[project.optional-dependencies]
+pdf = [
+    "PyMuPDF>=1.23.0",
+]
+docx = [
+    "python-docx>=0.8.11",
+]
+xml = [
+    "lxml>=4.9.0",
+]
+ocr = [
+    "opencv-python>=4.8.0",
+    "pytesseract>=0.3.10",
+]
+nlp = [
+    "nltk>=3.8.0",
+    "spacy>=3.7.0",
+    "scispacy>=0.5.0",
+    "pysbd>=0.3.4",
+]
+ml = [
+    "scikit-learn>=1.3.0",
+    "sentence-transformers>=2.2.0",
+    "faiss-cpu>=1.7.4",
+]
+all = [
+    "PyMuPDF>=1.23.0",
+    "python-docx>=0.8.11",
+    "lxml>=4.9.0",
+    "opencv-python>=4.8.0",
+    "pytesseract>=0.3.10",
+    "nltk>=3.8.0",
+    "spacy>=3.7.0",
+    "scispacy>=0.5.0",
+    "pysbd>=0.3.4",
+    "scikit-learn>=1.3.0",
+    "sentence-transformers>=2.2.0",
+    "faiss-cpu>=1.7.4",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Tarikul-Islam-Anik/scipreprocess"
+Repository = "https://github.com/Tarikul-Islam-Anik/scipreprocess"
+Issues = "https://github.com/Tarikul-Islam-Anik/scipreprocess/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py38", "py39", "py310", "py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
