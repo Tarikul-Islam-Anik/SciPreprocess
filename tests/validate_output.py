@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any
 
 
 class ValidationError(Exception):
@@ -22,10 +22,10 @@ class OutputValidator:
                    If False, collect and return validation warnings.
         """
         self.strict = strict
-        self.warnings: List[str] = []
-        self.errors: List[str] = []
+        self.warnings: list[str] = []
+        self.errors: list[str] = []
 
-    def validate(self, data: Union[Dict[str, Any], str, Path]) -> bool:
+    def validate(self, data: dict[str, Any] | str | Path) -> bool:
         """Validate output JSON structure and content.
 
         Args:
@@ -97,7 +97,7 @@ class OutputValidator:
             self.errors.append(error_msg)
             return False
 
-    def _load_json(self, path: Union[str, Path]) -> Dict[str, Any]:
+    def _load_json(self, path: str | Path) -> dict[str, Any]:
         """Load JSON from file or parse JSON string."""
         path = Path(path) if not isinstance(path, Path) else path
 
@@ -111,7 +111,7 @@ class OutputValidator:
             except json.JSONDecodeError:
                 raise ValidationError(f"Invalid JSON file or string: {path}")
 
-    def _validate_top_level(self, data: Dict[str, Any]):
+    def _validate_top_level(self, data: dict[str, Any]):
         """Validate top-level structure."""
         required_keys = [
             "metadata",
@@ -136,7 +136,7 @@ class OutputValidator:
         if unexpected:
             self.warnings.append(f"Unexpected top-level keys: {unexpected}")
 
-    def _validate_metadata(self, metadata: Dict[str, Any]):
+    def _validate_metadata(self, metadata: dict[str, Any]):
         """Validate metadata structure."""
         if not isinstance(metadata, dict):
             self.errors.append(f"metadata must be a dict, got {type(metadata).__name__}")
@@ -170,7 +170,7 @@ class OutputValidator:
         elif len(abstract) < 50:
             self.warnings.append(f"abstract seems very short ({len(abstract)} chars)")
 
-    def _validate_sections(self, sections: List[Dict[str, Any]]):
+    def _validate_sections(self, sections: list[dict[str, Any]]):
         """Validate sections structure."""
         if not isinstance(sections, list):
             self.errors.append(f"sections must be a list, got {type(sections).__name__}")
@@ -208,7 +208,7 @@ class OutputValidator:
                     f"sections[{i}] ('{section.get('heading', '?')}') has empty text"
                 )
 
-    def _validate_figures(self, figures: List[Dict[str, Any]]):
+    def _validate_figures(self, figures: list[dict[str, Any]]):
         """Validate figures structure."""
         if not isinstance(figures, list):
             self.errors.append(f"figures must be a list, got {type(figures).__name__}")
@@ -249,7 +249,7 @@ class OutputValidator:
                 elif figure["page"] <= 0:
                     self.errors.append(f"figures[{i}].page must be positive")
 
-    def _validate_tables(self, tables: List[Dict[str, Any]]):
+    def _validate_tables(self, tables: list[dict[str, Any]]):
         """Validate tables structure."""
         if not isinstance(tables, list):
             self.errors.append(f"tables must be a list, got {type(tables).__name__}")
@@ -288,7 +288,7 @@ class OutputValidator:
                 elif table["page"] <= 0:
                     self.errors.append(f"tables[{i}].page must be positive")
 
-    def _validate_equations(self, equations: List[Dict[str, Any]]):
+    def _validate_equations(self, equations: list[dict[str, Any]]):
         """Validate equations structure."""
         if not isinstance(equations, list):
             self.errors.append(f"equations must be a list, got {type(equations).__name__}")
@@ -326,7 +326,7 @@ class OutputValidator:
                 elif equation["page"] <= 0:
                     self.errors.append(f"equations[{i}].page must be positive")
 
-    def _validate_references(self, references: List[Dict[str, str]]):
+    def _validate_references(self, references: list[dict[str, str]]):
         """Validate references structure."""
         if not isinstance(references, list):
             self.errors.append(f"references must be a list, got {type(references).__name__}")
@@ -355,7 +355,7 @@ class OutputValidator:
             elif not reference["text"].strip():
                 self.warnings.append(f"references[{i}] has empty text")
 
-    def _validate_acronyms(self, acronyms: Dict[str, str]):
+    def _validate_acronyms(self, acronyms: dict[str, str]):
         """Validate acronyms structure."""
         if not isinstance(acronyms, dict):
             self.errors.append(f"acronyms must be a dict, got {type(acronyms).__name__}")
@@ -399,7 +399,7 @@ class OutputValidator:
 
 
 def validate_output(
-    data: Union[Dict[str, Any], str, Path], strict: bool = True, verbose: bool = True
+    data: dict[str, Any] | str | Path, strict: bool = True, verbose: bool = True
 ) -> bool:
     """Convenience function to validate output JSON.
 

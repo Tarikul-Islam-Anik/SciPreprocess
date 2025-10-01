@@ -1,9 +1,9 @@
 """Text preprocessing utilities including cleaning, tokenization, and lemmatization."""
 
 from __future__ import annotations
-from typing import Any
 
 import re
+from typing import Any
 
 from unidecode import unidecode
 

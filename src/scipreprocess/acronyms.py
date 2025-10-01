@@ -1,9 +1,9 @@
 """Acronym detection and expansion utilities."""
 
 from __future__ import annotations
-from typing import Any
 
 import re
+from typing import Any
 
 # Regex pattern for acronym definitions: "Long Form (SF)"
 ACRONYM_DEF = re.compile(r"\b([A-Za-z][A-Za-z\- ]{2,}?)\s*\(([A-Z]{2,})\)")
