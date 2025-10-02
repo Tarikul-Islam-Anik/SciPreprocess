@@ -1,0 +1,20 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include pyproject.toml
+recursive-include examples *.py *.md *.json *.pdf
+recursive-include tests *.py *.md
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
+recursive-exclude * .git*
+recursive-exclude * .pytest_cache
+recursive-exclude * .mypy_cache
+recursive-exclude * .ruff_cache
+recursive-exclude * .coverage
+recursive-exclude * htmlcov
+recursive-exclude * .tox
+recursive-exclude * venv
+recursive-exclude * .venv
+recursive-exclude * env
+recursive-exclude * .env

@@ -21,10 +21,10 @@ A modular, open-source pipeline for preprocessing scientific documents in multip
 
 ## Installation
 
-### Basic Installation
+### From PyPI (Recommended)
 
 ```bash
-pip install -e .
+pip install scipreprocess
 ```
 
 ### With Optional Dependencies
@@ -33,19 +33,29 @@ Install specific feature sets:
 
 ```bash
 # PDF support
-pip install -e ".[pdf]"
+pip install "scipreprocess[pdf]"
 
 # NLP features
-pip install -e ".[nlp]"
+pip install "scipreprocess[nlp]"
 
 # Machine learning features
-pip install -e ".[ml]"
+pip install "scipreprocess[ml]"
 
 # OCR support
-pip install -e ".[ocr]"
+pip install "scipreprocess[ocr]"
 
 # Everything
-pip install -e ".[all]"
+pip install "scipreprocess[all]"
+```
+
+### Development Installation
+
+For development or from source:
+
+```bash
+git clone https://github.com/Tarikul-Islam-Anik/scipreprocess.git
+cd scipreprocess
+pip install -e ".[all,dev]"
 ```
 
 ### Post-Installation Setup

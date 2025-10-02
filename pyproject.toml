@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A modular pipeline for preprocessing scientific documents (PDF, DOCX, TEX, XML, TXT)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Tarikul Islam Anik", email = "contact@oxyzen.dev"}
 ]
@@ -16,7 +16,6 @@ keywords = ["scientific", "preprocessing", "nlp", "pdf", "documents"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -79,7 +78,9 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/Tarikul-Islam-Anik/scipreprocess"
 Repository = "https://github.com/Tarikul-Islam-Anik/scipreprocess"
+Documentation = "https://github.com/Tarikul-Islam-Anik/scipreprocess#readme"
 Issues = "https://github.com/Tarikul-Islam-Anik/scipreprocess/issues"
+Changelog = "https://github.com/Tarikul-Islam-Anik/scipreprocess/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
