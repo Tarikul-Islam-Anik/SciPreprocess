@@ -216,7 +216,7 @@ def extract_references_from_pdf(doc, text_pages: list[str]) -> list[dict]:
             continue
 
         # Check if this is a reference number
-        if item.isdigit() and i + 1 < len(ref_items):
+        if item.isdigit() and i + 1 < len(ref_items) and ref_items[i + 1] is not None:
             if current_ref:
                 references.append(current_ref)
             current_ref = {"number": item, "text": ref_items[i + 1].strip()}
