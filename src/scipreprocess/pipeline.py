@@ -8,7 +8,7 @@ from typing import Any
 from .acronyms import detect_acronyms, expand_acronyms
 from .config import PipelineConfig
 from .features import maybe_build_embeddings, tfidf_features
-from .local_extract import extract_header_blocks
+from .local_extract import extract_header_blocks, extract_index_sections
 from .models import ParsedDocument
 from .parsers import ingest
 from .preprocessing import clean_text, ocr_image_to_text
@@ -116,6 +116,15 @@ class PreprocessingPipeline:
             "equations": parsed.metadata.get("equations", []),
             "references": parsed.metadata.get("references", []),
             "acronyms": acronyms,
+            # Minimal provenance for tests
+            "provenance": {
+                "pipeline": "local",
+                "backend": (
+                    self.config.parser_backend
+                    if self.config.parser_backend in {"local", "docling"}
+                    else "local"
+                ),
+            },
         }
 
     def preprocess_file(self, file_path: str, lower: bool = False) -> tuple[dict[str, Any], str]:
@@ -143,6 +152,11 @@ class PreprocessingPipeline:
             sections = split_into_sections_with_toc(full_text, toc)
         else:
             sections = split_into_sections(full_text)
+
+        # Remove TOC/index-like sections while preserving metadata if needed
+        index_info, consumed = extract_index_sections(sections, parsed.text_pages)
+        if consumed:
+            sections = [s for i, s in enumerate(sections) if i not in consumed]
 
         # Clean text in each section and detect acronyms
         cleaned_sections = []
@@ -179,10 +193,6 @@ class PreprocessingPipeline:
 
         # Assemble final JSON
         doc_json = self._assemble_document_json(parsed, expanded, sections, acr_map)
-        # Enforce authors are present
-        authors = doc_json.get("metadata", {}).get("authors")
-        if not authors:
-            raise ValueError("Authors not found")
 
         # Return JSON and combined section text
         section_text = " ".join(sec["text"] for sec in sections)

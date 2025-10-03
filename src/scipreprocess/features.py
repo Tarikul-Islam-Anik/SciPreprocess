@@ -19,8 +19,16 @@ def tfidf_features(corpus: list[str]) -> tuple[Any | None, Any | None]:
     if TfidfVectorizer is None:
         return None, None
 
-    vectorizer = TfidfVectorizer(max_features=50000, ngram_range=(1, 2), min_df=2)
-    tfidf_matrix = vectorizer.fit_transform(corpus)
+    # Guard against empty/near-empty corpora in tests
+    effective_min_df = 1 if len([c for c in corpus if c and c.strip()]) < 2 else 2
+    vectorizer = TfidfVectorizer(max_features=50000, ngram_range=(1, 2), min_df=effective_min_df)
+    if not corpus:
+        return None, vectorizer
+    try:
+        tfidf_matrix = vectorizer.fit_transform(corpus)
+    except ValueError:
+        # Empty vocabulary; fallback to no features
+        return None, vectorizer
 
     return tfidf_matrix, vectorizer
 

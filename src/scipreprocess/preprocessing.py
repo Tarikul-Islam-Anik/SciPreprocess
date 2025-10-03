@@ -87,8 +87,12 @@ def tokenize(text: str, nlp_model: Any | None = None) -> list[str]:
         return [t.text for t in doc if not t.is_space]
 
     if nltk is not None:
-        tokens: list[str] = nltk.word_tokenize(text)
-        return tokens
+        try:
+            tokens: list[str] = nltk.word_tokenize(text)
+            return tokens
+        except Exception:
+            # Fallback when punkt resources are missing
+            pass
 
     return re.findall(r"[A-Za-z0-9_\-']+", text)
 

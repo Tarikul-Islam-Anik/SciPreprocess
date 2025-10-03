@@ -23,6 +23,8 @@ class PipelineConfig:
     use_ocr: bool = False
     use_spacy: bool = True
     use_semantic_embeddings: bool = False
+    # Backend selection for parsing; "auto" defaults to local
+    parser_backend: str = "auto"
     spacy_model: str = "en_core_web_sm"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     chunk_target_sentences: tuple[int, int] = (3, 8)

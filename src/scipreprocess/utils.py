@@ -8,6 +8,7 @@ from typing import Any
 fitz: Any | None = None
 try:
     import fitz as _fitz  # PyMuPDF
+
     fitz = _fitz
 except Exception:
     pass
@@ -15,6 +16,7 @@ except Exception:
 docx: Any | None = None
 try:
     import docx as _docx  # python-docx
+
     docx = _docx
 except Exception:
     pass
@@ -22,6 +24,7 @@ except Exception:
 ET: Any | None = None
 try:
     import lxml.etree as _ET
+
     ET = _ET
 except Exception:
     pass
@@ -29,6 +32,7 @@ except Exception:
 cv2: Any | None = None
 try:
     import cv2 as _cv2  # OpenCV
+
     cv2 = _cv2
 except Exception:
     pass
@@ -36,6 +40,7 @@ except Exception:
 pytesseract: Any | None = None
 try:
     import pytesseract as _pytesseract
+
     pytesseract = _pytesseract
 except Exception:
     pass
@@ -43,6 +48,7 @@ except Exception:
 nltk: Any | None = None
 try:
     import nltk as _nltk
+
     nltk = _nltk
 except Exception:
     pass
@@ -52,6 +58,7 @@ AbbreviationDetector: Any | None = None
 try:
     import spacy as _spacy
     from scispacy.abbreviation import AbbreviationDetector as _AbbreviationDetector  # type: ignore
+
     spacy = _spacy
     AbbreviationDetector = _AbbreviationDetector
 except Exception:
@@ -60,6 +67,7 @@ except Exception:
 pysbd: Any | None = None
 try:
     import pysbd as _pysbd  # type: ignore
+
     pysbd = _pysbd
 except Exception:
     pass
@@ -67,6 +75,7 @@ except Exception:
 TfidfVectorizer: Any | None = None
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer as _TfidfVectorizer
+
     TfidfVectorizer = _TfidfVectorizer
 except Exception:
     pass
@@ -74,6 +83,7 @@ except Exception:
 SentenceTransformer: Any | None = None
 try:
     from sentence_transformers import SentenceTransformer as _SentenceTransformer
+
     SentenceTransformer = _SentenceTransformer
 except Exception:
     pass
@@ -81,6 +91,7 @@ except Exception:
 faiss: Any | None = None
 try:
     import faiss as _faiss  # type: ignore
+
     faiss = _faiss
 except Exception:
     pass
