@@ -29,4 +29,3 @@ def test_extract_authors_strict_ignores_non_names():
     ]
     authors = extract_authors_strict(pages)
     assert authors == []
-

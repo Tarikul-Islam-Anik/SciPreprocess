@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-
 _DOI_RE = re.compile(r"^10\.\d{4,9}/[-._;()/:A-Z0-9]+$", re.IGNORECASE)
 _ORCID_RE = re.compile(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$")
 _ISSN_RE = re.compile(r"^\d{4}-\d{3}[\dX]$", re.IGNORECASE)
@@ -71,7 +70,9 @@ def build_entity_linking(doc_json: dict[str, Any]) -> dict[str, Any]:
 
     # Authors
     for a in md.get("authors", []) or []:
-        entry: dict[str, Any] = {"name": a.get("full") or f"{a.get('given','')} {a.get('family','')}".strip()}
+        entry: dict[str, Any] = {
+            "name": a.get("full") or f"{a.get('given','')} {a.get('family','')}".strip()
+        }
         orcid = normalize_orcid(a.get("orcid"))
         if orcid:
             entry["orcid"] = {"id": orcid, "confidence": 0.95}
@@ -79,10 +80,12 @@ def build_entity_linking(doc_json: dict[str, Any]) -> dict[str, Any]:
 
     # Affiliations
     aff_norm = []
-    for a in (md.get("authors") or []):
+    for a in md.get("authors") or []:
         for aff in a.get("affiliations", []) or []:
             ror = normalize_ror(aff.get("ror")) if isinstance(aff, dict) else None
-            aff_entry: dict[str, Any] = {"name": (aff.get("name") if isinstance(aff, dict) else None)}
+            aff_entry: dict[str, Any] = {
+                "name": (aff.get("name") if isinstance(aff, dict) else None)
+            }
             if ror:
                 aff_entry["ror"] = {"id": ror, "confidence": 0.8}
             aff_norm.append(aff_entry)
@@ -90,5 +93,3 @@ def build_entity_linking(doc_json: dict[str, Any]) -> dict[str, Any]:
         linking["affiliations"] = aff_norm
 
     return linking
-
-

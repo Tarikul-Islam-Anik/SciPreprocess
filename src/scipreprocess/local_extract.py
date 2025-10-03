@@ -21,59 +21,105 @@ ORCID_RE = re.compile(r"\b\d{4}-\d{4}-\d{4}-\d{3}[\dX]\b")
 
 def parse_toc_lines(text: str) -> list[dict[str, str | None]]:
     items: list[dict[str, str | None]] = []
-    for line in (l.strip() for l in text.splitlines() if l.strip()):
+    for line in (raw_line.strip() for raw_line in text.splitlines() if raw_line.strip()):
         # Remove dot leaders
         line = re.sub(r"\s*\.{2,}\s*", " ", line)
         m = re.match(r"^(?P<id>(\d+)(?:\.(\d+))*)\s+(?P<name>.+?)\s+(?P<page>\d+)$", line)
         if m:
             ident = m.group("id")
             parent = ident.rsplit(".", 1)[0] if "." in ident else None
-            items.append({"id": ident, "parent_id": parent, "name": m.group("name").strip(), "page": m.group("page")})
+            items.append(
+                {
+                    "id": ident,
+                    "parent_id": parent,
+                    "name": m.group("name").strip(),
+                    "page": m.group("page"),
+                }
+            )
             continue
         # fallback: no numeric id
         m2 = re.match(r"^(?P<name>.+?)\s+(?P<page>\d+)$", line)
         if m2:
-            items.append({"id": None, "parent_id": None, "name": m2.group("name").strip(), "page": m2.group("page")})
+            items.append(
+                {
+                    "id": None,
+                    "parent_id": None,
+                    "name": m2.group("name").strip(),
+                    "page": m2.group("page"),
+                }
+            )
     return items
 
 
 def parse_list_items(text: str, kind: str) -> list[dict[str, str | int]]:
     out: list[dict[str, str | int]] = []
-    for line in (l.strip() for l in text.splitlines() if l.strip()):
+    for line in (raw_line.strip() for raw_line in text.splitlines() if raw_line.strip()):
         line = re.sub(r"\s*\.{2,}\s*", " ", line)
         # Match patterns like "3.1 Title .... 27" or "1 Title 12"
         m = re.match(r"^(?P<num>[A-Za-z0-9_.-]+)\s+(?P<title>.+?)\s+(?P<page>\d+)$", line)
         if not m:
             continue
         if kind == "figures":
-            out.append({"figure_number": m.group("num"), "title": m.group("title").strip(), "page": int(m.group("page"))})
+            out.append(
+                {
+                    "figure_number": m.group("num"),
+                    "title": m.group("title").strip(),
+                    "page": int(m.group("page")),
+                }
+            )
         elif kind == "tables":
-            out.append({"table_number": m.group("num"), "title": m.group("title").strip(), "page": int(m.group("page"))})
+            out.append(
+                {
+                    "table_number": m.group("num"),
+                    "title": m.group("title").strip(),
+                    "page": int(m.group("page")),
+                }
+            )
         else:
-            out.append({"number": m.group("num"), "title": m.group("title").strip(), "page": int(m.group("page"))})
+            out.append(
+                {
+                    "number": m.group("num"),
+                    "title": m.group("title").strip(),
+                    "page": int(m.group("page")),
+                }
+            )
     return out
 
 
 def _is_toc_like(text: str) -> bool:
-    lines = [re.sub(r"\s*\.{2,}\s*", " ", l.strip()) for l in text.splitlines() if l.strip()]
+    lines = [
+        re.sub(r"\s*\.{2,}\s*", " ", raw_line.strip())
+        for raw_line in text.splitlines()
+        if raw_line.strip()
+    ]
     match_count = 0
-    for l in lines:
-        if re.match(r"^(\d+(?:\.\d+)*)\s+.+\s+\d+$", l) or re.match(r"^.+\s+\d+$", l):
+    for toc_line in lines:
+        if re.match(r"^(\d+(?:\.\d+)*)\s+.+\s+\d+$", toc_line) or re.match(r"^.+\s+\d+$", toc_line):
             match_count += 1
     return match_count >= 5
 
 
 def parse_term_defs(text: str) -> list[dict[str, str]]:
     out: list[dict[str, str]] = []
-    for line in (l.strip() for l in text.splitlines() if l.strip()):
+    for line in (raw_line.strip() for raw_line in text.splitlines() if raw_line.strip()):
         m = re.match(r"^(?P<term>[^:–-]+)\s*[:–-]\s*(?P<def>.+)$", line)
         if m:
             out.append({"term": m.group("term").strip(), "definition": m.group("def").strip()})
     return out
 
 
-def extract_index_sections(sections: list[dict[str, Any]], text_pages: list[str]) -> tuple[dict[str, Any], set[int]]:
-    index = {"toc_structured": None, "list_of_figures": None, "list_of_tables": None, "list_of_algorithms": None, "list_of_abbreviations": None, "list_of_symbols": None, "glossary": None}
+def extract_index_sections(
+    sections: list[dict[str, Any]], text_pages: list[str]
+) -> tuple[dict[str, Any], set[int]]:
+    index = {
+        "toc_structured": None,
+        "list_of_figures": None,
+        "list_of_tables": None,
+        "list_of_algorithms": None,
+        "list_of_abbreviations": None,
+        "list_of_symbols": None,
+        "glossary": None,
+    }
     consumed: set[int] = set()
     for i, s in enumerate(sections):
         h = s.get("heading", "").strip().lower()
@@ -152,7 +198,7 @@ def extract_header_blocks(text_pages: list[str]) -> dict[str, Any]:
     if m_head:
         header_end = m_head.start()
     head_text = first[:header_end]
-    lines = [l.strip() for l in head_text.splitlines() if l.strip()]
+    lines = [raw_line.strip() for raw_line in head_text.splitlines() if raw_line.strip()]
     header: dict[str, Any] = {}
 
     # Title guess: longest line near top
@@ -177,7 +223,7 @@ def extract_authors_strict(text_pages: list[str]) -> list[dict[str, Any]]:
     if m_head:
         header_end = m_head.start()
     head_text = first[:header_end]
-    lines = [l.strip() for l in head_text.splitlines() if l.strip()]
+    lines = [raw_line.strip() for raw_line in head_text.splitlines() if raw_line.strip()]
 
     stop_words = {
         "pages",
@@ -233,27 +279,32 @@ def extract_authors_strict(text_pages: list[str]) -> list[dict[str, Any]]:
         return proper[0].rstrip("."), proper[-1].rstrip("."), " ".join(proper)
 
     found: list[dict[str, Any]] = []
-    for l in lines[:50]:
-        if EMAIL_RE.search(l) or (("," in l or ";" in l or " and " in l) and sum(w.istitle() for w in l.split()) >= 2):
-            emails = EMAIL_RE.findall(l)
-            orcids = ORCID_RE.findall(l)
-            parts = re.split(r",|;|\band\b", l)
+    for header_line in lines[:50]:
+        if EMAIL_RE.search(header_line) or (
+            ("," in header_line or ";" in header_line or " and " in header_line)
+            and sum(w.istitle() for w in header_line.split()) >= 2
+        ):
+            emails = EMAIL_RE.findall(header_line)
+            orcids = ORCID_RE.findall(header_line)
+            parts = re.split(r",|;|\band\b", header_line)
             for p in (pp.strip() for pp in parts if pp and pp.strip()):
                 g, f, full = normalize_candidate(p)
                 if g and f:
-                    found.append({
-                        "full": full,
-                        "email": emails[0] if emails else None,
-                        "orcid": orcids[0] if orcids else None,
-                        "affiliations": [],
-                    })
-        if found and ("," in l or ";" in l or " and " in l):
+                    found.append(
+                        {
+                            "full": full,
+                            "email": emails[0] if emails else None,
+                            "orcid": orcids[0] if orcids else None,
+                            "affiliations": [],
+                        }
+                    )
+        if found and ("," in header_line or ";" in header_line or " and " in header_line):
             break
 
     # Fallback: scan for contiguous name-like spans when no delimiters are present
     if not found:
         name_span_re = re.compile(r"\b([A-Z][a-zA-Z'\.-]+(?:\s+[A-Z][a-zA-Z'\.-]+){1,2})\b")
-        for idx, l in enumerate(lines[:60], start=1):
+        for idx, header_line in enumerate(lines[:60], start=1):
             # skip likely title lines (first 4 lines)
             if idx <= 4:
                 continue
@@ -261,21 +312,34 @@ def extract_authors_strict(text_pages: list[str]) -> list[dict[str, Any]]:
             if idx > 20:
                 break
             # skip affiliation-heavy lines
-            low = l.lower()
-            if any(w in low for w in ("university", "institute", "department", "school", "college", "press", "association")):
+            low = header_line.lower()
+            if any(
+                w in low
+                for w in (
+                    "university",
+                    "institute",
+                    "department",
+                    "school",
+                    "college",
+                    "press",
+                    "association",
+                )
+            ):
                 continue
             # strip trailing markers (greek letters/symbols) attached to tokens
-            cleaned = re.sub(r"([A-Za-z][a-zA-Z'\.-]+)[^\sA-Za-z]", r"\1", l)
+            cleaned = re.sub(r"([A-Za-z][a-zA-Z'\.-]+)[^\sA-Za-z]", r"\1", header_line)
             for m in name_span_re.finditer(cleaned):
                 cand = m.group(1).strip()
                 g, f, full = normalize_candidate(cand)
                 if g and f:
-                    found.append({
-                        "full": full,
-                        "email": None,
-                        "orcid": None,
-                        "affiliations": [],
-                    })
+                    found.append(
+                        {
+                            "full": full,
+                            "email": None,
+                            "orcid": None,
+                            "affiliations": [],
+                        }
+                    )
             if len(found) >= 2:
                 break
 
@@ -283,7 +347,7 @@ def extract_authors_strict(text_pages: list[str]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     out: list[dict[str, Any]] = []
     for a in found:
-        k = (a["full"].lower())
+        k = a["full"].lower()
         if k in seen:
             continue
         seen.add(k)
@@ -323,7 +387,9 @@ def extract_venue_info(text_pages: list[str]) -> dict[str, Any]:
     return out
 
 
-def extract_ack_foot_append(sections: list[dict[str, Any]], text_pages: list[str]) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+def extract_ack_foot_append(
+    sections: list[dict[str, Any]], text_pages: list[str]
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     # Simple mapping section to first matching page
     def find_page(text: str) -> str | None:
         for i, pg in enumerate(text_pages, 1):
@@ -340,7 +406,13 @@ def extract_ack_foot_append(sections: list[dict[str, Any]], text_pages: list[str
         if "acknowled" in h:
             acks = {"text": s["text"], "page_span": [find_page(s["text"]), None]}
         if h.startswith("appendix") or "appendix" in h:
-            appx.append({"heading": s["heading"], "text": s["text"], "page_span": [find_page(s["text"]), None]})
+            appx.append(
+                {
+                    "heading": s["heading"],
+                    "text": s["text"],
+                    "page_span": [find_page(s["text"]), None],
+                }
+            )
 
     # Footnotes heuristic: lines that start with a small number + space at bottom of pages
     for idx, pg in enumerate(text_pages, 1):
@@ -351,7 +423,9 @@ def extract_ack_foot_append(sections: list[dict[str, Any]], text_pages: list[str
     return acks, footnotes, appx
 
 
-def enrich_equations(equations: list[dict[str, Any]], text_pages: list[str]) -> list[dict[str, Any]]:
+def enrich_equations(
+    equations: list[dict[str, Any]], text_pages: list[str]
+) -> list[dict[str, Any]]:
     enriched: list[dict[str, Any]] = []
     for eq in equations:
         page = eq.get("page")
@@ -365,4 +439,3 @@ def enrich_equations(equations: list[dict[str, Any]], text_pages: list[str]) -> 
         new_eq = {"type": typ, "number": eq.get("number"), "tex": tex, "mathml": None, "page": page}
         enriched.append(new_eq)
     return enriched
-

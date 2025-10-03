@@ -8,11 +8,15 @@ from typing import Any
 from .acronyms import detect_acronyms, expand_acronyms
 from .config import PipelineConfig
 from .features import maybe_build_embeddings, tfidf_features
+from .local_extract import extract_header_blocks
 from .models import ParsedDocument
 from .parsers import ingest
 from .preprocessing import clean_text, ocr_image_to_text
-from .sectioning import semantic_chunk_sections, split_into_sections, split_into_sections_with_toc
-from .local_extract import extract_header_blocks
+from .sectioning import (
+    semantic_chunk_sections,
+    split_into_sections,
+    split_into_sections_with_toc,
+)
 from .utils import ensure_nltk_resources, load_spacy_model, print_availability_status
 
 

@@ -5,12 +5,14 @@ import json
 import sys
 from pathlib import Path
 
-from .pipeline import PreprocessingPipeline
 from .config import PipelineConfig
+from .pipeline import PreprocessingPipeline
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(prog="scipreprocess", description="Preprocess documents with optional Docling backend")
+    p = argparse.ArgumentParser(
+        prog="scipreprocess", description="Preprocess documents with optional Docling backend"
+    )
     p.add_argument("inputs", nargs="+", help="Paths to documents")
     p.add_argument("--backend", choices=["auto", "docling", "local"], default="auto")
     p.add_argument("--ocr", action="store_true")
@@ -48,5 +50,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-

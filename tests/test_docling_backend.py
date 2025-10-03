@@ -4,8 +4,8 @@ import pathlib
 
 import pytest
 
-from scipreprocess.pipeline import PreprocessingPipeline
 from scipreprocess.config import PipelineConfig
+from scipreprocess.pipeline import PreprocessingPipeline
 
 
 @pytest.mark.parametrize("backend", ["auto", "docling", "local"])
@@ -26,15 +26,15 @@ def test_backend_provenance(tmp_path: pathlib.Path, backend: str):
 
 
 def test_cli_hardening_empty(tmp_path: pathlib.Path, capsys):
-    from scipreprocess.cli import main
     import sys
+
+    from scipreprocess.cli import main
 
     sys.argv = ["scipreprocess", "--backend", "auto", "nonexistent.file"]
     rc = main()
     assert rc == 2
     captured = capsys.readouterr()
     assert "no valid inputs" in captured.err
-
 
 
 def test_toc_sections_are_filtered(tmp_path: pathlib.Path):
@@ -75,4 +75,3 @@ def test_toc_sections_are_filtered(tmp_path: pathlib.Path):
     # If parsed, toc_structured may exist either from index extraction or metadata
     # Not strictly required, but ensure pipeline remains stable
     assert "sections" in doc and isinstance(doc["sections"], list)
-
