@@ -5,62 +5,85 @@ from __future__ import annotations
 from typing import Any
 
 # Guarded imports for optional dependencies
+fitz: Any | None = None
 try:
-    import fitz  # PyMuPDF
+    import fitz as _fitz  # PyMuPDF
+    fitz = _fitz
 except Exception:
-    fitz = None
+    pass
 
+docx: Any | None = None
 try:
-    import docx  # python-docx
+    import docx as _docx  # python-docx
+    docx = _docx
 except Exception:
-    docx = None
+    pass
 
+ET: Any | None = None
 try:
-    import lxml.etree as ET
+    import lxml.etree as _ET
+    ET = _ET
 except Exception:
-    ET = None
+    pass
 
+cv2: Any | None = None
 try:
-    import cv2  # OpenCV
+    import cv2 as _cv2  # OpenCV
+    cv2 = _cv2
 except Exception:
-    cv2 = None
+    pass
 
+pytesseract: Any | None = None
 try:
-    import pytesseract
+    import pytesseract as _pytesseract
+    pytesseract = _pytesseract
 except Exception:
-    pytesseract = None
+    pass
 
+nltk: Any | None = None
 try:
-    import nltk
+    import nltk as _nltk
+    nltk = _nltk
 except Exception:
-    nltk = None
+    pass
 
+spacy: Any | None = None
+AbbreviationDetector: Any | None = None
 try:
-    import spacy
-    from scispacy.abbreviation import AbbreviationDetector  # type: ignore
+    import spacy as _spacy
+    from scispacy.abbreviation import AbbreviationDetector as _AbbreviationDetector  # type: ignore
+    spacy = _spacy
+    AbbreviationDetector = _AbbreviationDetector
 except Exception:
-    spacy = None
-    AbbreviationDetector = None
+    pass
 
+pysbd: Any | None = None
 try:
-    import pysbd  # type: ignore
+    import pysbd as _pysbd  # type: ignore
+    pysbd = _pysbd
 except Exception:
-    pysbd = None
+    pass
 
+TfidfVectorizer: Any | None = None
 try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.feature_extraction.text import TfidfVectorizer as _TfidfVectorizer
+    TfidfVectorizer = _TfidfVectorizer
 except Exception:
-    TfidfVectorizer = None
+    pass
 
+SentenceTransformer: Any | None = None
 try:
-    from sentence_transformers import SentenceTransformer
+    from sentence_transformers import SentenceTransformer as _SentenceTransformer
+    SentenceTransformer = _SentenceTransformer
 except Exception:
-    SentenceTransformer = None
+    pass
 
+faiss: Any | None = None
 try:
-    import faiss  # type: ignore
+    import faiss as _faiss  # type: ignore
+    faiss = _faiss
 except Exception:
-    faiss = None
+    pass
 
 
 def is_available(name: str) -> bool:

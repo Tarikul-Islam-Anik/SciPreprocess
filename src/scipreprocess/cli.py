@@ -24,7 +24,6 @@ def main() -> int:
     cfg = PipelineConfig(
         use_ocr=args.ocr,
         use_layout=args.layout,
-        parser_backend=args.backend,  # type: ignore[arg-type]
     )
     pipe = PreprocessingPipeline(cfg)
     inputs = []

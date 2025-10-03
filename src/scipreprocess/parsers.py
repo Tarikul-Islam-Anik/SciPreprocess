@@ -50,7 +50,8 @@ def render_pdf_page_to_image(page, dpi: int = 200):
 
     import numpy as np
 
-    img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
+    # Shape is (height, width, channels) with dtype uint8
+    img: Any = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
     if pix.n == 4:
         img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
     return img

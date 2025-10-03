@@ -19,7 +19,7 @@ EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.IGNORECASE)
 ORCID_RE = re.compile(r"\b\d{4}-\d{4}-\d{4}-\d{3}[\dX]\b")
 
 
-def parse_toc_lines(text: str) -> list[dict[str, str | None]]:
+def parse_toc_lines(text: str) -> list[dict[str, Any]]:
     items: list[dict[str, str | None]] = []
     for line in (raw_line.strip() for raw_line in text.splitlines() if raw_line.strip()):
         # Remove dot leaders
@@ -51,7 +51,7 @@ def parse_toc_lines(text: str) -> list[dict[str, str | None]]:
     return items
 
 
-def parse_list_items(text: str, kind: str) -> list[dict[str, str | int]]:
+def parse_list_items(text: str, kind: str) -> list[dict[str, Any]]:
     out: list[dict[str, str | int]] = []
     for line in (raw_line.strip() for raw_line in text.splitlines() if raw_line.strip()):
         line = re.sub(r"\s*\.{2,}\s*", " ", line)
@@ -99,8 +99,8 @@ def _is_toc_like(text: str) -> bool:
     return match_count >= 5
 
 
-def parse_term_defs(text: str) -> list[dict[str, str]]:
-    out: list[dict[str, str]] = []
+def parse_term_defs(text: str) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
     for line in (raw_line.strip() for raw_line in text.splitlines() if raw_line.strip()):
         m = re.match(r"^(?P<term>[^:–-]+)\s*[:–-]\s*(?P<def>.+)$", line)
         if m:
@@ -111,7 +111,7 @@ def parse_term_defs(text: str) -> list[dict[str, str]]:
 def extract_index_sections(
     sections: list[dict[str, Any]], text_pages: list[str]
 ) -> tuple[dict[str, Any], set[int]]:
-    index = {
+    index: dict[str, list[dict[str, Any]] | None] = {
         "toc_structured": None,
         "list_of_figures": None,
         "list_of_tables": None,
