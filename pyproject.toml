@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scipreprocess"
-version = "0.1.1"
+version = "0.1.2"
 description = "A modular pipeline for preprocessing scientific documents (PDF, DOCX, TEX, XML, TXT)"
 readme = "README.md"
 requires-python = ">=3.10"

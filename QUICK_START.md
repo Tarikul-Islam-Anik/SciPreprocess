@@ -58,6 +58,32 @@ pipeline = PreprocessingPipeline(config)
 doc_json, text = pipeline.preprocess_file("paper.pdf")
 ```
 
+## 5. Command Line Interface
+
+SciPreprocess also includes a CLI for quick document processing:
+
+```bash
+# Process documents (JSON output by default)
+scipreprocess document.pdf
+
+# Export as CSV
+scipreprocess document.pdf --format csv
+
+# Process multiple documents
+scipreprocess paper1.pdf paper2.docx --format csv --out results.csv
+
+# Enable OCR for scanned documents
+scipreprocess scanned.pdf --ocr --format csv
+```
+
+### CLI Options
+
+- `--format {json,csv}`: Output format (default: json)
+- `--ocr`: Enable OCR for scanned documents
+- `--layout`: Enable layout analysis
+- `--lower`: Convert text to lowercase
+- `--out FILE`: Save output to file (default: stdout)
+
 ## Need More Help?
 
 - 📖 **Full documentation**: See [README.md](README.md)

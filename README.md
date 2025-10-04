@@ -18,6 +18,7 @@ A modular, open-source pipeline for preprocessing scientific documents in multip
 - 📊 **Feature extraction**: TF-IDF and semantic embeddings with sentence-transformers
 - 🔎 **Semantic search**: FAISS indexing for efficient similarity search
 - 🧩 **Modular design**: Use only the components you need
+- 📊 **Export formats**: JSON (default) or CSV output with `--format` flag
 
 ## Installation
 
@@ -124,6 +125,64 @@ config = PipelineConfig(
 pipeline = PreprocessingPipeline(config)
 doc_json, text = pipeline.preprocess_file("paper.pdf")
 ```
+
+## Command Line Interface
+
+SciPreprocess includes a command-line interface for easy document processing:
+
+### Basic CLI Usage
+
+```bash
+# Process documents and output JSON (default)
+scipreprocess document1.pdf document2.docx
+
+# Process with OCR enabled
+scipreprocess --ocr scanned_document.pdf
+
+# Process with layout analysis
+scipreprocess --layout complex_document.pdf
+
+# Convert text to lowercase
+scipreprocess --lower document.pdf
+```
+
+### Export Formats
+
+The CLI supports two output formats:
+
+```bash
+# JSON output (default)
+scipreprocess document.pdf
+
+# CSV output - one row per document
+scipreprocess document.pdf --format csv
+
+# Save to file
+scipreprocess document.pdf --format csv --out results.csv
+```
+
+### CLI Options
+
+- `inputs`: Paths to documents to process (required)
+- `--backend {auto,docling,local}`: Parser backend (default: auto)
+- `--ocr`: Enable OCR for scanned documents
+- `--layout`: Enable layout analysis
+- `--lower`: Convert text to lowercase
+- `--format {json,csv}`: Output format (default: json)
+- `--out FILE`: Output file path (default: stdout)
+
+### CSV Output Format
+
+When using `--format csv`, the output contains one row per document with flattened nested data:
+
+```csv
+abstract,metadata.source_file,metadata.title,metadata.pages,sections
+"Abstract text...","document.pdf","Paper Title",12,"[{""heading"": ""Introduction"", ""text"": ""..."", ...}]"
+```
+
+- Nested dictionaries are flattened with dotted keys (e.g., `metadata.title`)
+- Arrays are JSON-stringified (e.g., `sections`, `figures`, `tables`)
+- Only document data is included (excludes `tfidf`, `chunks`, `embeddings`, `index`)
 
 ## Pipeline Components
 

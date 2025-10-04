@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
 from .config import PipelineConfig
 from .pipeline import PreprocessingPipeline
+from .utils import serialize_output
 
 
 def main() -> int:
@@ -19,6 +19,9 @@ def main() -> int:
     p.add_argument("--layout", action="store_true")
     p.add_argument("--lower", action="store_true")
     p.add_argument("--out", type=str, default="-")
+    p.add_argument(
+        "--format", choices=["json", "csv"], default="json", help="Output format (default: json)"
+    )
     args = p.parse_args()
 
     cfg = PipelineConfig(
@@ -39,7 +42,7 @@ def main() -> int:
 
     result = pipe.preprocess_documents(inputs, lower=args.lower)
 
-    output = json.dumps(result, ensure_ascii=False)
+    output = serialize_output(result, format=args.format)
     if args.out == "-":
         print(output)
     else:

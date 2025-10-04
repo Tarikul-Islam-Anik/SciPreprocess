@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import csv
+import io
+import json
 from typing import Any
 
 # Guarded imports for optional dependencies
@@ -174,3 +177,69 @@ def print_availability_status(nlp_model: Any | None = None) -> dict[str, bool]:
     }
     print(status)
     return status
+
+
+def flatten_dict(obj: dict, parent: str = "", sep: str = ".") -> dict[str, object]:
+    """Flatten a nested dictionary using dotted keys.
+
+    Args:
+        obj: Dictionary to flatten.
+        parent: Parent key prefix for recursion.
+        sep: Separator for nested keys.
+
+    Returns:
+        Flattened dictionary with dotted keys.
+    """
+    flat: dict[str, object] = {}
+    for key, value in obj.items():
+        new_key = f"{parent}{sep}{key}" if parent else key
+        if isinstance(value, dict):
+            flat.update(flatten_dict(value, new_key, sep))
+        elif isinstance(value, list):
+            flat[new_key] = json.dumps(value, ensure_ascii=False)
+        else:
+            flat[new_key] = value
+    return flat
+
+
+def _convert_documents_to_csv(data: dict) -> str:
+    """Convert documents data to CSV format.
+
+    Args:
+        data: Pipeline output data containing 'documents' key.
+
+    Returns:
+        CSV string with one row per document.
+    """
+    docs = data.get("documents", []) or []
+    output = io.StringIO()
+    if not docs:
+        return ""
+
+    flattened = [flatten_dict(d) for d in docs]
+    headers = sorted({k for f in flattened for k in f.keys()})
+    writer = csv.writer(output)
+    writer.writerow(headers)
+    for f in flattened:
+        writer.writerow([f.get(h, "") for h in headers])
+    return output.getvalue()
+
+
+def serialize_output(data: dict, format: str = "json") -> str:
+    """Serialize pipeline output data to specified format.
+
+    Args:
+        data: Pipeline output data.
+        format: Output format ('json' or 'csv').
+
+    Returns:
+        Serialized data as string.
+
+    Raises:
+        ValueError: If format is not supported.
+    """
+    if format == "csv":
+        return _convert_documents_to_csv(data)
+    if format == "json":
+        return json.dumps(data, ensure_ascii=False)
+    raise ValueError("Unsupported format: use 'json' or 'csv'")
