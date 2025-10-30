@@ -113,7 +113,7 @@ def test_pipeline_handles_non_string_figure_captions():
     assert figures[0]["summary"] == ""
     assert figures[1]["caption"] == "['List', 'caption']"
     assert figures[1]["summary"] == ""
-    assert figures[2]["summary"]
+    assert figures[2]["summary"] != ""
 
 
 if __name__ == "__main__":
