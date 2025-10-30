@@ -12,6 +12,7 @@ from .local_extract import extract_header_blocks, extract_index_sections
 from .models import ParsedDocument
 from .parsers import ingest
 from .preprocessing import clean_text, ocr_image_to_text
+from .summarization import summarize_caption
 from .sectioning import (
     semantic_chunk_sections,
     split_into_sections,
