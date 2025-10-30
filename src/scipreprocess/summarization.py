@@ -108,8 +108,7 @@ def summarize_caption(
         return _trim_to_word_limit(cleaned, max_words)
 
     if len(sentences) == 1:
-        summary = _trim_to_word_limit(sentences[0], max_words)
-        return summary
+        return _trim_to_word_limit(sentences[0], max_words)
 
     caption_tokens = _prepare_tokens(cleaned, nlp_model)
     if not caption_tokens:
