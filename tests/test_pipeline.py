@@ -3,10 +3,12 @@
 import sys
 from pathlib import Path
 
-import pytest
-
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+import pytest
+
+import scipreprocess.pipeline as pipeline
 
 from scipreprocess.acronyms import detect_acronyms, expand_acronyms
 from scipreprocess.config import PipelineConfig
