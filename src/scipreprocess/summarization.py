@@ -17,7 +17,7 @@ def _first_sentences(text: str, max_sentences: int = 2) -> str:
     # implementation dependency-free for tests.
     sentences: list[str] = []
     buffer: list[str] = []
-    delimiters: Iterable[str] = {".", "!", "?"}
+    delimiters: set[str] = {".", "!", "?"}
 
     for char in text:
         buffer.append(char)
