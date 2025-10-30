@@ -27,8 +27,6 @@ def _prepare_tokens(text: str, nlp_model: Any | None = None) -> list[str]:
         filtered = _basic_tokenize(text)
 
     filtered = remove_stopwords(filtered, nlp_model) if filtered else filtered
-    if not filtered and nlp_model is not None:
-        filtered = remove_stopwords(filtered, None)
 
     if filtered:
         lemmas = lemmatize(filtered, nlp_model)
