@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from scipreprocess.acronyms import detect_acronyms, expand_acronyms
 from scipreprocess.config import PipelineConfig
+from scipreprocess.models import ParsedDocument
+from scipreprocess.pipeline import PreprocessingPipeline
 from scipreprocess.preprocessing import clean_text, tokenize
 from scipreprocess.sectioning import split_into_sections
 
@@ -82,6 +84,36 @@ def test_split_into_sections():
     assert "Abstract" in headings
     assert "Introduction" in headings
     assert "Methods" in headings
+
+
+def test_pipeline_handles_non_string_figure_captions():
+    """Ensure figure captions that are not strings are handled gracefully."""
+
+    pipeline = PreprocessingPipeline(PipelineConfig(use_spacy=False))
+
+    parsed = ParsedDocument(
+        source_path="dummy.pdf",
+        is_scanned=False,
+        text_pages=[""],
+        images=[],
+        metadata={
+            "figures": [
+                {"caption": {"text": "Dict caption"}},
+                {"caption": ["List", "caption"]},
+                {"caption": "A normal caption."},
+            ]
+        },
+    )
+
+    sections = [{"heading": "Intro", "text": "Some introduction."}]
+    doc_json = pipeline._assemble_document_json(parsed, "", sections, {})
+
+    figures = doc_json["figures"]
+    assert figures[0]["caption"] == "{'text': 'Dict caption'}"
+    assert figures[0]["summary"] == ""
+    assert figures[1]["caption"] == "['List', 'caption']"
+    assert figures[1]["summary"] == ""
+    assert figures[2]["summary"]
 
 
 if __name__ == "__main__":

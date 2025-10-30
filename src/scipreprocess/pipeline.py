@@ -12,6 +12,7 @@ from .local_extract import extract_header_blocks, extract_index_sections
 from .models import ParsedDocument
 from .parsers import ingest
 from .preprocessing import clean_text, ocr_image_to_text
+from .summarization import summarize_caption
 from .sectioning import (
     semantic_chunk_sections,
     split_into_sections,
@@ -111,7 +112,7 @@ class PreprocessingPipeline:
             },
             "abstract": abstract,
             "sections": sections,
-            "figures": parsed.metadata.get("figures", []),
+            "figures": self._summarize_figures(parsed.metadata.get("figures", [])),
             "tables": parsed.metadata.get("tables", []),
             "equations": parsed.metadata.get("equations", []),
             "references": parsed.metadata.get("references", []),
@@ -198,6 +199,31 @@ class PreprocessingPipeline:
         section_text = " ".join(sec["text"] for sec in sections)
 
         return doc_json, section_text
+
+    def _summarize_figures(self, figures: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+        """Summarize figure captions while guarding against bad types."""
+
+        if not figures:
+            return []
+
+        summarized: list[dict[str, Any]] = []
+        for figure in figures:
+            if not isinstance(figure, dict):
+                continue
+
+            figure_copy = dict(figure)
+            caption = figure_copy.get("caption")
+            if isinstance(caption, str):
+                figure_copy["summary"] = summarize_caption(caption)
+            elif caption is not None:
+                figure_copy["caption"] = str(caption)
+                figure_copy["summary"] = ""
+            else:
+                figure_copy["summary"] = ""
+
+            summarized.append(figure_copy)
+
+        return summarized
 
     def preprocess_documents(self, file_paths: list[str], lower: bool = False) -> dict[str, Any]:
         """Preprocess multiple scientific documents.
