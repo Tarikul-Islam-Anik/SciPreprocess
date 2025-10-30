@@ -3,10 +3,12 @@
 import sys
 from pathlib import Path
 
-import pytest
-
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+import pytest
+
+import scipreprocess.pipeline as pipeline
 
 from scipreprocess.acronyms import detect_acronyms, expand_acronyms
 from scipreprocess.config import PipelineConfig
@@ -84,5 +86,38 @@ def test_split_into_sections():
     assert "Methods" in headings
 
 
+def test_figure_summaries_enabled(monkeypatch):
+    """Ensure figure summaries are generated when enabled."""
+
+    figures = [{"caption": "This figure shows a very detailed experiment."}]
+
+    summary_text = "short summary"
+
+    def fake_summarize(caption: str) -> str:
+        fake_summarize.called = True
+        return summary_text
+
+    fake_summarize.called = False
+    monkeypatch.setattr("scipreprocess.pipeline.summarize_caption", fake_summarize)
+
+    result = pipeline._summarize_figures(figures, use_summaries=True)
+
+    assert fake_summarize.called is True
+    assert result[0]["summary"] == summary_text
+
+
+def test_figure_summaries_disabled(monkeypatch):
+    """Ensure figure summaries are omitted when disabled."""
+
+    figures = [{"caption": "This figure shows a very detailed experiment.", "summary": "old"}]
+
+    def fake_summarize(caption: str) -> str:  # pragma: no cover - should not run
+        raise AssertionError("summarize_caption should not be called when disabled")
+
+    monkeypatch.setattr("scipreprocess.pipeline.summarize_caption", fake_summarize)
+
+    result = pipeline._summarize_figures(figures, use_summaries=False)
+
+    assert "summary" not in result[0]
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

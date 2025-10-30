@@ -14,6 +14,7 @@ class PipelineConfig:
         use_ocr: Enable OCR for scanned documents (requires pytesseract).
         use_spacy: Use spaCy for NLP tasks (tokenization, lemmatization).
         use_semantic_embeddings: Generate semantic embeddings for chunks.
+        use_figure_summaries: Generate short summaries for figure captions.
         spacy_model: Name of the spaCy model to load.
         embedding_model: Name of the sentence-transformer model.
         chunk_target_sentences: Min and max sentences per chunk.
@@ -23,6 +24,7 @@ class PipelineConfig:
     use_ocr: bool = False
     use_spacy: bool = True
     use_semantic_embeddings: bool = False
+    use_figure_summaries: bool = True
     # Backend selection for parsing; "auto" defaults to local
     parser_backend: str = "auto"
     spacy_model: str = "en_core_web_sm"

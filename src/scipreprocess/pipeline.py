@@ -20,6 +20,39 @@ from .sectioning import (
 from .utils import ensure_nltk_resources, load_spacy_model, print_availability_status
 
 
+def summarize_caption(caption: str, max_words: int = 40) -> str:
+    """Create a short summary from a figure caption."""
+
+    words = caption.strip().split()
+    if len(words) <= max_words:
+        return caption.strip()
+    return " ".join(words[:max_words]) + "..."
+
+
+def _summarize_figures(
+    figures: list[dict[str, Any]],
+    use_summaries: bool = True,
+) -> list[dict[str, Any]]:
+    """Attach optional summaries to figure metadata."""
+
+    summarized: list[dict[str, Any]] = []
+    for figure in figures:
+        figure_copy: dict[str, Any] = dict(figure)
+
+        if not use_summaries:
+            figure_copy.pop("summary", None)
+            summarized.append(figure_copy)
+            continue
+
+        caption = figure_copy.get("caption")
+        if isinstance(caption, str) and caption.strip():
+            figure_copy["summary"] = summarize_caption(caption)
+
+        summarized.append(figure_copy)
+
+    return summarized
+
+
 class PreprocessingPipeline:
     """Main preprocessing pipeline for scientific documents."""
 
@@ -101,6 +134,11 @@ class PreprocessingPipeline:
         # Extract abstract
         abstract = next((s["text"] for s in sections if s["heading"].lower() == "abstract"), "")
 
+        figures = _summarize_figures(
+            parsed.metadata.get("figures", []),
+            self.config.use_figure_summaries,
+        )
+
         return {
             "metadata": {
                 "title": title,
@@ -111,7 +149,7 @@ class PreprocessingPipeline:
             },
             "abstract": abstract,
             "sections": sections,
-            "figures": parsed.metadata.get("figures", []),
+            "figures": figures,
             "tables": parsed.metadata.get("tables", []),
             "equations": parsed.metadata.get("equations", []),
             "references": parsed.metadata.get("references", []),
