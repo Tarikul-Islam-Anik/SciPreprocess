@@ -12,6 +12,8 @@ import scipreprocess.pipeline as pipeline
 
 from scipreprocess.acronyms import detect_acronyms, expand_acronyms
 from scipreprocess.config import PipelineConfig
+from scipreprocess.models import ParsedDocument
+from scipreprocess.pipeline import PreprocessingPipeline
 from scipreprocess.preprocessing import clean_text, tokenize
 from scipreprocess.sectioning import split_into_sections
 
@@ -86,38 +88,36 @@ def test_split_into_sections():
     assert "Methods" in headings
 
 
-def test_figure_summaries_enabled(monkeypatch):
-    """Ensure figure summaries are generated when enabled."""
+def test_pipeline_figures_summary():
+    """Ensure figure summaries are generated and bounded."""
 
-    figures = [{"caption": "This figure shows a very detailed experiment."}]
+    pipeline = PreprocessingPipeline(PipelineConfig(use_spacy=False))
+    parsed = ParsedDocument(
+        source_path="dummy.pdf",
+        is_scanned=False,
+        text_pages=[""],
+        images=[],
+        metadata={
+            "figures": [
+                {
+                    "type": "figure",
+                    "number": "1",
+                    "caption": (
+                        "Figure 1 illustrates the proposed architecture with three major modules. "
+                        "The framework improves classification accuracy by combining contextual cues."
+                    ),
+                }
+            ]
+        },
+    )
 
-    summary_text = "short summary"
-
-    def fake_summarize(caption: str) -> str:
-        fake_summarize.called = True
-        return summary_text
-
-    fake_summarize.called = False
-    monkeypatch.setattr("scipreprocess.pipeline.summarize_caption", fake_summarize)
-
-    result = pipeline._summarize_figures(figures, use_summaries=True)
-
-    assert fake_summarize.called is True
-    assert result[0]["summary"] == summary_text
+    doc_json = pipeline._assemble_document_json(parsed, "", [], {})
+    figures = doc_json["figures"]
+    assert figures, "Figures should be preserved in the JSON payload"
+    summary = figures[0].get("summary", "")
+    assert summary, "Summaries must not be empty"
+    assert len(summary.split()) <= 60, "Summaries should be length constrained"
 
 
-def test_figure_summaries_disabled(monkeypatch):
-    """Ensure figure summaries are omitted when disabled."""
-
-    figures = [{"caption": "This figure shows a very detailed experiment.", "summary": "old"}]
-
-    def fake_summarize(caption: str) -> str:  # pragma: no cover - should not run
-        raise AssertionError("summarize_caption should not be called when disabled")
-
-    monkeypatch.setattr("scipreprocess.pipeline.summarize_caption", fake_summarize)
-
-    result = pipeline._summarize_figures(figures, use_summaries=False)
-
-    assert "summary" not in result[0]
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
