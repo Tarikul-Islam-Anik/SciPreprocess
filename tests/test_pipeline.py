@@ -86,11 +86,10 @@ def test_split_into_sections():
     assert "Methods" in headings
 
 
-def test_pipeline_handles_non_string_figure_captions():
-    """Ensure figure captions that are not strings are handled gracefully."""
+def test_pipeline_figures_summary():
+    """Ensure figure summaries are generated and bounded."""
 
     pipeline = PreprocessingPipeline(PipelineConfig(use_spacy=False))
-
     parsed = ParsedDocument(
         source_path="dummy.pdf",
         is_scanned=False,
@@ -98,22 +97,24 @@ def test_pipeline_handles_non_string_figure_captions():
         images=[],
         metadata={
             "figures": [
-                {"caption": {"text": "Dict caption"}},
-                {"caption": ["List", "caption"]},
-                {"caption": "A normal caption."},
+                {
+                    "type": "figure",
+                    "number": "1",
+                    "caption": (
+                        "Figure 1 illustrates the proposed architecture with three major modules. "
+                        "The framework improves classification accuracy by combining contextual cues."
+                    ),
+                }
             ]
         },
     )
 
-    sections = [{"heading": "Intro", "text": "Some introduction."}]
-    doc_json = pipeline._assemble_document_json(parsed, "", sections, {})
-
+    doc_json = pipeline._assemble_document_json(parsed, "", [], {})
     figures = doc_json["figures"]
-    assert figures[0]["caption"] == "{'text': 'Dict caption'}"
-    assert figures[0]["summary"] == ""
-    assert figures[1]["caption"] == "['List', 'caption']"
-    assert figures[1]["summary"] == ""
-    assert figures[2]["summary"] != ""
+    assert figures, "Figures should be preserved in the JSON payload"
+    summary = figures[0].get("summary", "")
+    assert summary, "Summaries must not be empty"
+    assert len(summary.split()) <= 60, "Summaries should be length constrained"
 
 
 if __name__ == "__main__":

@@ -18,6 +18,7 @@ from .sectioning import (
     split_into_sections,
     split_into_sections_with_toc,
 )
+from .summarization import summarize_caption
 from .utils import ensure_nltk_resources, load_spacy_model, print_availability_status
 
 
@@ -102,6 +103,8 @@ class PreprocessingPipeline:
         # Extract abstract
         abstract = next((s["text"] for s in sections if s["heading"].lower() == "abstract"), "")
 
+        figures = self._summarize_figures(parsed.metadata.get("figures", []))
+
         return {
             "metadata": {
                 "title": title,
@@ -112,7 +115,7 @@ class PreprocessingPipeline:
             },
             "abstract": abstract,
             "sections": sections,
-            "figures": self._summarize_figures(parsed.metadata.get("figures", [])),
+            "figures": figures,
             "tables": parsed.metadata.get("tables", []),
             "equations": parsed.metadata.get("equations", []),
             "references": parsed.metadata.get("references", []),
@@ -201,27 +204,22 @@ class PreprocessingPipeline:
         return doc_json, section_text
 
     def _summarize_figures(self, figures: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
-        """Summarize figure captions while guarding against bad types."""
+        """Attach concise NLP summaries to figure metadata entries."""
 
         if not figures:
             return []
 
         summarized: list[dict[str, Any]] = []
-        for figure in figures:
-            if not isinstance(figure, dict):
+        for item in figures:
+            if not isinstance(item, dict):
+                summarized.append(item)
                 continue
 
-            figure_copy = dict(figure)
-            caption = figure_copy.get("caption")
-            if isinstance(caption, str):
-                figure_copy["summary"] = summarize_caption(caption)
-            elif caption is not None:
-                figure_copy["caption"] = str(caption)
-                figure_copy["summary"] = ""
-            else:
-                figure_copy["summary"] = ""
-
-            summarized.append(figure_copy)
+            caption = item.get("caption", "")
+            summary = summarize_caption(caption, self.nlp_model)
+            enriched = dict(item)
+            enriched["summary"] = summary
+            summarized.append(enriched)
 
         return summarized
 
