@@ -13,6 +13,9 @@ from .utils import cv2, nltk, pytesseract
 CITATION_PATTERN = re.compile(r"\(([A-Z][A-Za-z\-]+)( et al\.)?,\s*\d{4}[a-z]?\)")
 BRACKET_CITATION = re.compile(r"\[[0-9]{1,3}\]")
 
+# Default word budget for caption summaries
+CAPTION_SUMMARY_WORD_LIMIT = 60
+
 # NLTK resources
 STOPWORDS = set()
 WN = None
@@ -185,3 +188,35 @@ def sentence_split(text: str) -> list[str]:
         return [s.strip() for s in seg.segment(text) if s.strip()]
 
     return [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+
+
+def summarize_caption(caption: str, word_limit: int = CAPTION_SUMMARY_WORD_LIMIT) -> str:
+    """Summarize a figure or table caption while applying documented fallbacks."""
+
+    raw = caption.strip()
+    if not raw:
+        return ""
+
+    cleaned = clean_text(raw)
+    if not cleaned:
+        return ""
+
+    tokens = tokenize(cleaned)
+    if not tokens:
+        return cleaned
+
+    sentences = sentence_split(cleaned)
+    if len(sentences) == 1:
+        single = sentences[0].strip()
+        if not single:
+            return cleaned
+        words = [w for w in single.split() if w]
+        if len(words) <= word_limit:
+            return single
+        return " ".join(words[:word_limit]) + "…"
+
+    words = [w for w in cleaned.split() if w]
+    if len(words) <= word_limit:
+        return cleaned
+
+    return " ".join(words[:word_limit]) + "…"
