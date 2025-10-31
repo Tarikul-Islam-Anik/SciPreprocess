@@ -1,9 +1,17 @@
 """Tests for output validation."""
 
 import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import pytest
-from validate_output import OutputValidator, ValidationError, validate_output
+from scipreprocess.validate_output import (
+    OutputValidator,
+    ValidationError,
+    validate_output,
+)
 
 
 class TestOutputValidator:

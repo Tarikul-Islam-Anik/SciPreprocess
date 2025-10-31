@@ -27,7 +27,7 @@ python tests/run_validation.py
 ### Python API
 
 ```python
-from tests.validate_output import validate_output, OutputValidator
+from scipreprocess.validate_output import validate_output, OutputValidator
 
 # Simple validation
 result = validate_output("output.json")
@@ -169,7 +169,7 @@ pytest tests/test_validation.py::TestOutputValidator::test_valid_output -v
 ### During Processing
 ```python
 from scipreprocess import preprocess_file
-from tests.validate_output import validate_output
+from scipreprocess.validate_output import validate_output
 
 # Process document
 doc_json, clean_text = preprocess_file("paper.pdf")
@@ -185,7 +185,7 @@ if is_valid:
 ### Post-Processing Validation
 ```python
 import json
-from tests.validate_output import validate_output
+from scipreprocess.validate_output import validate_output
 
 # Load processed output
 with open("output.json", "r") as f:
@@ -218,7 +218,7 @@ else:
 To add custom validation rules:
 
 ```python
-from tests.validate_output import OutputValidator
+from scipreprocess.validate_output import OutputValidator
 
 class CustomValidator(OutputValidator):
     def validate(self, data):

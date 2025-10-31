@@ -171,6 +171,13 @@ scipreprocess document.pdf --format csv --out results.csv
 - `--format {json,csv}`: Output format (default: json)
 - `--out FILE`: Output file path (default: stdout)
 
+### Automatic Output Validation
+
+Every CLI invocation now validates each generated document JSON with
+`scipreprocess.validate_output.OutputValidator` before writing results. If the
+structure deviates from the expected schema, the command exits with a clear,
+actionable error so downstream workflows can rely on a stable payload shape.
+
 ### CSV Output Format
 
 When using `--format csv`, the output contains one row per document with flattened nested data:
