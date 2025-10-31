@@ -8,14 +8,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import pytest
 
-import scipreprocess.pipeline as pipeline
-
 from scipreprocess.acronyms import detect_acronyms, expand_acronyms
 from scipreprocess.config import PipelineConfig
 from scipreprocess.models import ParsedDocument
 from scipreprocess.pipeline import PreprocessingPipeline
 from scipreprocess.preprocessing import clean_text, tokenize
 from scipreprocess.sectioning import split_into_sections
+from validate_output import OutputValidator
 
 
 def test_config_defaults():
@@ -117,6 +116,37 @@ def test_pipeline_figures_summary():
     summary = figures[0].get("summary", "")
     assert summary, "Summaries must not be empty"
     assert len(summary.split()) <= 60, "Summaries should be length constrained"
+
+
+def test_pipeline_merges_extracted_identifiers(monkeypatch):
+    """Identifiers detected from text should surface in the metadata block."""
+
+    pipe = PreprocessingPipeline(PipelineConfig(use_spacy=False))
+    text_pages = [
+        (
+            "Abstract\nThis work references DOI 10.5555/12345678 for completeness.\n"
+            "Introduction\nSee also arXiv:2101.12345 for prior art."
+        )
+    ]
+
+    parsed = ParsedDocument(
+        source_path="dummy.pdf",
+        is_scanned=False,
+        text_pages=text_pages,
+        images=[],
+        metadata={"title": "Parser Title", "identifiers": {"doi": "10.9999/parser"}},
+    )
+
+    monkeypatch.setattr("scipreprocess.pipeline.ingest", lambda *_, **__: parsed)
+
+    doc_json, _ = pipe.preprocess_file("dummy.pdf")
+
+    identifiers = doc_json["metadata"].get("identifiers", {})
+    assert identifiers["doi"] == "10.9999/parser"
+    assert identifiers["arxiv"] == "2101.12345"
+
+    validator = OutputValidator(strict=False)
+    assert validator.validate(doc_json) is True
 
 
 if __name__ == "__main__":
