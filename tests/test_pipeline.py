@@ -119,5 +119,69 @@ def test_pipeline_figures_summary():
     assert len(summary.split()) <= 60, "Summaries should be length constrained"
 
 
+def test_pipeline_preserves_structured_index(monkeypatch):
+    """Structured TOC/index entries should surface in the final payload."""
+
+    config = PipelineConfig(use_spacy=False)
+    pipe = PreprocessingPipeline(config)
+
+    synthetic_toc = [
+        {"id": "1", "parent_id": None, "name": "Introduction", "page": "1"},
+        {"id": "1.1", "parent_id": "1", "name": "Background", "page": "2"},
+    ]
+
+    parsed = ParsedDocument(
+        source_path="dummy.pdf",
+        is_scanned=False,
+        text_pages=[
+            (
+                "Table of Contents\n"
+                "1 Introduction 1\n"
+                "1.1 Background 2\n\n"
+                "List of Figures\n"
+                "1 System Overview 5\n\n"
+                "Introduction\n"
+                "Main body text."
+            )
+        ],
+        images=[],
+        metadata={"toc": synthetic_toc},
+    )
+
+    sections = [
+        {
+            "heading": "Table of Contents",
+            "text": "1 Introduction 1\n1.1 Background 2\n",
+        },
+        {"heading": "List of Figures", "text": "1 System Overview 5\n"},
+        {"heading": "Introduction", "text": "Main body text."},
+    ]
+
+    monkeypatch.setattr(
+        pipeline,
+        "ingest",
+        lambda file_path, use_ocr, use_layout: parsed,
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "split_into_sections_with_toc",
+        lambda full_text, toc: sections,
+    )
+    monkeypatch.setattr(pipeline, "split_into_sections", lambda full_text: sections)
+
+    doc_json, _ = pipe.preprocess_file("dummy.pdf")
+
+    metadata = doc_json["metadata"]
+    assert metadata.get("toc") == synthetic_toc
+
+    index_block = metadata.get("index", {})
+    assert index_block, "Index metadata should be populated"
+    toc_structured = index_block.get("toc_structured", [])
+    assert toc_structured and toc_structured[0]["name"] == "Introduction"
+
+    figures_list = index_block.get("list_of_figures", [])
+    assert figures_list and figures_list[0]["title"] == "System Overview"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
