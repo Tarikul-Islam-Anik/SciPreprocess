@@ -151,13 +151,8 @@ def example_validate_output():
     print("Example 5: Validating output JSON")
     print("=" * 60)
 
-    # Import validation module from tests
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).parent.parent / "tests"))
-
     try:
-        from validate_output import OutputValidator
+        from scipreprocess.validate_output import OutputValidator
 
         # Validate the test.json output
         output_file = "examples/output/test.json"
@@ -205,7 +200,7 @@ def example_validate_output():
 
     except ImportError as e:
         print(f"\n❌ Could not import validation module: {e}")
-        print("Make sure validate_output.py exists in the tests/ directory.")
+        print("Ensure scipreprocess is installed and accessible on PYTHONPATH.")
 
 
 def main():

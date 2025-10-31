@@ -4,10 +4,7 @@
 import sys
 from pathlib import Path
 
-# Add tests directory to path
-sys.path.insert(0, str(Path(__file__).parent))
-
-from validate_output import OutputValidator, validate_output
+from scipreprocess.validate_output import OutputValidator, validate_output
 
 
 def create_sample_output():
