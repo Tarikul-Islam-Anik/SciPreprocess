@@ -114,6 +114,7 @@ class PreprocessingPipeline:
         full_text: str,
         sections: list[dict[str, Any]],
         acronyms: dict[str, str],
+        index_info: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Assemble final document JSON structure.
 
@@ -138,14 +139,23 @@ class PreprocessingPipeline:
 
         figures = self._summarize_figures(parsed.metadata.get("figures", []))
 
+        metadata: dict[str, Any] = {
+            "title": title,
+            "source_file": parsed.source_path,
+            "pages": parsed.metadata.get("pages", None),
+            # Surface extracted authors if available
+            "authors": parsed.metadata.get("authors", []),
+        }
+
+        toc_entries = parsed.metadata.get("toc")
+        if toc_entries:
+            metadata["toc"] = toc_entries
+
+        if index_info:
+            metadata["index"] = index_info
+
         return {
-            "metadata": {
-                "title": title,
-                "source_file": parsed.source_path,
-                "pages": parsed.metadata.get("pages", None),
-                # Surface extracted authors if available
-                "authors": parsed.metadata.get("authors", []),
-            },
+            "metadata": metadata,
             "abstract": abstract,
             "sections": sections,
             "figures": figures,
@@ -229,7 +239,13 @@ class PreprocessingPipeline:
             )
 
         # Assemble final JSON
-        doc_json = self._assemble_document_json(parsed, expanded, sections, acr_map)
+        doc_json = self._assemble_document_json(
+            parsed,
+            expanded,
+            sections,
+            acr_map,
+            index_info,
+        )
 
         # Return JSON and combined section text
         section_text = " ".join(sec["text"] for sec in sections)
