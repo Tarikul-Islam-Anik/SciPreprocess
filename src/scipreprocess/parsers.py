@@ -6,6 +6,17 @@ import pathlib
 import re
 from typing import Any
 
+try:  # pragma: no cover - optional native acceleration
+    from rust_extensions.pdf_ingest import (  # type: ignore[import-not-found]
+        extract_text_from_pdf as rust_extract_text_from_pdf,
+        is_available as rust_backend_available,
+    )
+except Exception:  # pragma: no cover - runtime availability check
+    rust_extract_text_from_pdf = None
+
+    def rust_backend_available() -> bool:
+        return False
+
 from .models import ParsedDocument
 from .utils import ET, cv2, docx, fitz
 
@@ -235,7 +246,7 @@ def extract_references_from_pdf(doc, text_pages: list[str]) -> list[dict]:
     return references
 
 
-def extract_text_from_pdf(
+def _extract_text_from_pdf_python(
     pdf_path: str, use_ocr: bool = False, use_layout: bool = False
 ) -> ParsedDocument:
     """Extract text from a PDF document.
@@ -294,6 +305,69 @@ def extract_text_from_pdf(
             "references": references,
         },
     )
+
+
+def _extract_text_from_pdf_native(
+    pdf_path: str, use_ocr: bool = False, use_layout: bool = False
+) -> ParsedDocument:
+    """Invoke the optional Rust backend if it has been built."""
+
+    if rust_extract_text_from_pdf is None:
+        raise RuntimeError("Rust backend not available")
+
+    payload = rust_extract_text_from_pdf(pdf_path, use_ocr, use_layout)
+    pages = [str(p) for p in payload.get("pages", [])]
+    images = list(payload.get("images", []))
+    metadata = dict(payload.get("metadata", {}))
+    if "pages" not in metadata:
+        metadata["pages"] = len(pages)
+
+    return ParsedDocument(
+        source_path=pdf_path,
+        is_scanned=bool(payload.get("is_scanned", False)),
+        text_pages=pages,
+        images=images,
+        metadata=metadata,
+    )
+
+
+def extract_text_from_pdf(
+    pdf_path: str,
+    use_ocr: bool = False,
+    use_layout: bool = False,
+    backend: str | None = None,
+) -> ParsedDocument:
+    """Extract text from PDF using either the Python or Rust backend."""
+
+    preference = (backend or "auto").lower()
+    valid = {"auto", "local", "docling", "rust", "native"}
+    if preference not in valid:
+        raise ValueError(f"Unknown parser backend: {preference}")
+
+    selected = preference
+
+    if selected == "native":
+        selected = "rust"
+
+    if preference == "auto":
+        selected = "rust" if rust_backend_available() else "local"
+
+    if selected in {"rust", "native"}:
+        if not rust_backend_available():
+            if preference == "auto":
+                selected = "local"
+            else:
+                raise RuntimeError("Rust backend requested but not available")
+
+    if selected == "rust":
+        parsed = _extract_text_from_pdf_native(pdf_path, use_ocr, use_layout)
+        parsed.metadata["_parser_backend"] = "rust"
+        return parsed
+
+    # Fallback to the pure Python implementation for local/docling cases
+    parsed = _extract_text_from_pdf_python(pdf_path, use_ocr, use_layout)
+    parsed.metadata["_parser_backend"] = "local"
+    return parsed
 
 
 def extract_text_from_docx(docx_path: str) -> ParsedDocument:
@@ -436,13 +510,19 @@ def extract_text_from_txt(txt_path: str) -> ParsedDocument:
     )
 
 
-def ingest(file_path: str, use_ocr: bool = False, use_layout: bool = False) -> ParsedDocument:
+def ingest(
+    file_path: str,
+    use_ocr: bool = False,
+    use_layout: bool = False,
+    backend: str | None = None,
+) -> ParsedDocument:
     """Ingest a document and extract its text.
 
     Args:
         file_path: Path to the document.
         use_ocr: Whether OCR might be needed for PDFs.
         use_layout: Whether layout analysis might be needed for PDFs.
+        backend: Preferred parser backend for PDFs.
 
     Returns:
         ParsedDocument with extracted text.
@@ -453,7 +533,7 @@ def ingest(file_path: str, use_ocr: bool = False, use_layout: bool = False) -> P
     fmt = detect_format(file_path)
 
     if fmt == "pdf":
-        return extract_text_from_pdf(file_path, use_ocr, use_layout)
+        return extract_text_from_pdf(file_path, use_ocr, use_layout, backend=backend)
     if fmt == "docx":
         return extract_text_from_docx(file_path)
     if fmt == "tex":

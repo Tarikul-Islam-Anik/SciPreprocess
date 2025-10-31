@@ -164,7 +164,7 @@ scipreprocess document.pdf --format csv --out results.csv
 ### CLI Options
 
 - `inputs`: Paths to documents to process (required)
-- `--backend {auto,docling,local}`: Parser backend (default: auto)
+- `--backend {auto,docling,local,rust}`: Parser backend (default: auto)
 - `--ocr`: Enable OCR for scanned documents
 - `--layout`: Enable layout analysis
 - `--lower`: Convert text to lowercase

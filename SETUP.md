@@ -207,6 +207,38 @@ black src/ tests/
 ruff check src/ tests/
 ```
 
+### Building the optional Rust PDF backend
+
+The accelerated PDF parser lives in `rust_extensions/pdf_ingest` and is built
+with [PyO3](https://pyo3.rs/). To compile it:
+
+1. Install the Rust toolchain (via [rustup](https://rustup.rs/)).
+2. Install `maturin` inside your virtual environment: `pip install maturin`.
+3. Build and install the extension in-place:
+
+   ```bash
+   python -m maturin develop --release --manifest-path rust_extensions/pdf_ingest/Cargo.toml
+   ```
+
+   The command produces a `pdf_ingest_rs` extension that the Python package
+   auto-detects at runtime.
+4. Verify availability:
+
+   ```python
+   >>> from rust_extensions import pdf_ingest
+   >>> pdf_ingest.is_available()
+   True
+   ```
+
+5. Run the backend parity test suite:
+
+   ```bash
+   pytest tests/test_pdf_backends.py -k rust_backend
+   ```
+
+If the extension is not built, SciPreprocess automatically falls back to the
+pure-Python PDF parser.
+
 ## Docker Setup (Optional)
 
 Create a `Dockerfile`:

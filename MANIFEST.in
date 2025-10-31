@@ -4,6 +4,7 @@ include CHANGELOG.md
 include pyproject.toml
 recursive-include examples *.py *.md *.json *.pdf
 recursive-include tests *.py *.md
+recursive-include rust_extensions *.py *.rs Cargo.toml
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * .DS_Store

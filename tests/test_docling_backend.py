@@ -22,7 +22,7 @@ def test_backend_provenance(tmp_path: pathlib.Path, backend: str):
     doc = out["documents"][0]
     prov = doc.get("provenance", {})
     assert prov.get("pipeline") == "local"
-    assert prov.get("backend") in {"local", "docling"}
+    assert prov.get("backend") in {"local", "docling", "rust"}
 
 
 def test_cli_hardening_empty(tmp_path: pathlib.Path, capsys):
