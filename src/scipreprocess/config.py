@@ -15,6 +15,7 @@ class PipelineConfig:
         use_spacy: Use spaCy for NLP tasks (tokenization, lemmatization).
         use_semantic_embeddings: Generate semantic embeddings for chunks.
         use_figure_summaries: Generate short summaries for figure captions.
+        parser_backend: Preferred PDF parser backend ("auto", "local", "docling", "rust").
         spacy_model: Name of the spaCy model to load.
         embedding_model: Name of the sentence-transformer model.
         chunk_target_sentences: Min and max sentences per chunk.
@@ -25,7 +26,7 @@ class PipelineConfig:
     use_spacy: bool = True
     use_semantic_embeddings: bool = False
     use_figure_summaries: bool = True
-    # Backend selection for parsing; "auto" defaults to local
+    # Backend selection for parsing; "auto" prefers the Rust backend when available
     parser_backend: str = "auto"
     spacy_model: str = "en_core_web_sm"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"

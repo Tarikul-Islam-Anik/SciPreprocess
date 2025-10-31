@@ -11,10 +11,10 @@ from .utils import serialize_output
 
 def main() -> int:
     p = argparse.ArgumentParser(
-        prog="scipreprocess", description="Preprocess documents with optional Docling backend"
+        prog="scipreprocess", description="Preprocess documents with optional accelerated backends"
     )
     p.add_argument("inputs", nargs="+", help="Paths to documents")
-    p.add_argument("--backend", choices=["auto", "docling", "local"], default="auto")
+    p.add_argument("--backend", choices=["auto", "docling", "local", "rust"], default="auto")
     p.add_argument("--ocr", action="store_true")
     p.add_argument("--layout", action="store_true")
     p.add_argument("--lower", action="store_true")
@@ -27,6 +27,7 @@ def main() -> int:
     cfg = PipelineConfig(
         use_ocr=args.ocr,
         use_layout=args.layout,
+        parser_backend=args.backend,
     )
     pipe = PreprocessingPipeline(cfg)
     inputs = []

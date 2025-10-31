@@ -12,17 +12,16 @@ from .local_extract import extract_header_blocks, extract_index_sections
 from .models import ParsedDocument
 from .parsers import ingest
 from .preprocessing import clean_text, ocr_image_to_text
-from .summarization import summarize_caption
+from .summarization import summarize_caption as advanced_summarize_caption
 from .sectioning import (
     semantic_chunk_sections,
     split_into_sections,
     split_into_sections_with_toc,
 )
-from .summarization import summarize_caption
 from .utils import ensure_nltk_resources, load_spacy_model, print_availability_status
 
 
-def summarize_caption(caption: str, max_words: int = 40) -> str:
+def _fallback_summarize_caption(caption: str, max_words: int = 40) -> str:
     """Create a short summary from a figure caption."""
 
     words = caption.strip().split()
@@ -48,7 +47,7 @@ def _summarize_figures(
 
         caption = figure_copy.get("caption")
         if isinstance(caption, str) and caption.strip():
-            figure_copy["summary"] = summarize_caption(caption)
+            figure_copy["summary"] = _fallback_summarize_caption(caption)
 
         summarized.append(figure_copy)
 
@@ -136,31 +135,34 @@ class PreprocessingPipeline:
         # Extract abstract
         abstract = next((s["text"] for s in sections if s["heading"].lower() == "abstract"), "")
 
-        figures = self._summarize_figures(parsed.metadata.get("figures", []))
+        metadata = {
+            k: v for k, v in parsed.metadata.items() if not k.startswith("_")
+        }
+        figures = self._summarize_figures(metadata.get("figures", []))
+
+        backend = parsed.metadata.get("_parser_backend") or self.config.parser_backend
+        if backend not in {"local", "docling", "rust"}:
+            backend = "local"
 
         return {
             "metadata": {
                 "title": title,
                 "source_file": parsed.source_path,
-                "pages": parsed.metadata.get("pages", None),
+                "pages": metadata.get("pages", None),
                 # Surface extracted authors if available
-                "authors": parsed.metadata.get("authors", []),
+                "authors": metadata.get("authors", []),
             },
             "abstract": abstract,
             "sections": sections,
             "figures": figures,
-            "tables": parsed.metadata.get("tables", []),
-            "equations": parsed.metadata.get("equations", []),
-            "references": parsed.metadata.get("references", []),
+            "tables": metadata.get("tables", []),
+            "equations": metadata.get("equations", []),
+            "references": metadata.get("references", []),
             "acronyms": acronyms,
             # Minimal provenance for tests
             "provenance": {
                 "pipeline": "local",
-                "backend": (
-                    self.config.parser_backend
-                    if self.config.parser_backend in {"local", "docling"}
-                    else "local"
-                ),
+                "backend": backend,
             },
         }
 
@@ -175,7 +177,12 @@ class PreprocessingPipeline:
             Tuple of (document JSON, full cleaned text).
         """
         # Ingest document
-        parsed = ingest(file_path, self.config.use_ocr, self.config.use_layout)
+        parsed = ingest(
+            file_path,
+            self.config.use_ocr,
+            self.config.use_layout,
+            backend=self.config.parser_backend,
+        )
 
         # Apply OCR if needed
         parsed = self._ensure_text_for_scanned(parsed)
@@ -249,7 +256,10 @@ class PreprocessingPipeline:
                 continue
 
             caption = item.get("caption", "")
-            summary = summarize_caption(caption, self.nlp_model)
+            if self.nlp_model is not None:
+                summary = advanced_summarize_caption(caption, self.nlp_model)
+            else:
+                summary = _fallback_summarize_caption(caption)
             enriched = dict(item)
             enriched["summary"] = summary
             summarized.append(enriched)

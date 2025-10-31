@@ -1,0 +1,12 @@
+[package]
+name = "pdf_ingest_rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "pdf_ingest_rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.21", features = ["extension-module", "abi3-py310"] }
+regex = "1"
