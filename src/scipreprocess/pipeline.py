@@ -8,11 +8,14 @@ from typing import Any
 from .acronyms import detect_acronyms, expand_acronyms
 from .config import PipelineConfig
 from .features import maybe_build_embeddings, tfidf_features
-from .local_extract import extract_header_blocks, extract_index_sections
+from .local_extract import (
+    extract_header_blocks,
+    extract_identifiers,
+    extract_index_sections,
+)
 from .models import ParsedDocument
 from .parsers import ingest
 from .preprocessing import clean_text, ocr_image_to_text
-from .summarization import summarize_caption
 from .sectioning import (
     semantic_chunk_sections,
     split_into_sections,
@@ -22,7 +25,11 @@ from .summarization import summarize_caption
 from .utils import ensure_nltk_resources, load_spacy_model, print_availability_status
 
 
-def summarize_caption(caption: str, max_words: int = 40) -> str:
+def summarize_caption(
+    caption: str,
+    _nlp_model: Any | None = None,
+    max_words: int = 40,
+) -> str:
     """Create a short summary from a figure caption."""
 
     words = caption.strip().split()
@@ -138,14 +145,19 @@ class PreprocessingPipeline:
 
         figures = self._summarize_figures(parsed.metadata.get("figures", []))
 
+        metadata_block = {
+            "title": title,
+            "source_file": parsed.source_path,
+            "pages": parsed.metadata.get("pages", None),
+            # Surface extracted authors if available
+            "authors": parsed.metadata.get("authors", []),
+        }
+        identifiers = parsed.metadata.get("identifiers")
+        if isinstance(identifiers, dict) and identifiers:
+            metadata_block["identifiers"] = identifiers
+
         return {
-            "metadata": {
-                "title": title,
-                "source_file": parsed.source_path,
-                "pages": parsed.metadata.get("pages", None),
-                # Surface extracted authors if available
-                "authors": parsed.metadata.get("authors", []),
-            },
+            "metadata": metadata_block,
             "abstract": abstract,
             "sections": sections,
             "figures": figures,
@@ -211,21 +223,42 @@ class PreprocessingPipeline:
         # Get expanded full text for return value
         expanded = " ".join(sec["text"] for sec in sections)
 
+        metadata = dict(parsed.metadata)
+        metadata_changed = False
+
+        identifiers = extract_identifiers(parsed.text_pages)
+        if identifiers:
+            existing_ids = metadata.get("identifiers")
+            if isinstance(existing_ids, dict):
+                combined_ids = dict(identifiers)
+                combined_ids.update(existing_ids)
+            elif existing_ids:
+                combined_ids = existing_ids
+            else:
+                combined_ids = dict(identifiers)
+            if combined_ids != existing_ids:
+                metadata["identifiers"] = combined_ids
+                metadata_changed = True
+
         # Heuristically extract header info (title/authors) and merge into metadata
         header = extract_header_blocks(parsed.text_pages)
         if header:
-            merged_md = dict(parsed.metadata)
-            # Only override title if not already set by parser
-            if header.get("title") and not merged_md.get("title"):
-                merged_md["title"] = header["title"]
-            if header.get("authors"):
-                merged_md["authors"] = header["authors"]
+            title = header.get("title")
+            if title and not metadata.get("title"):
+                metadata["title"] = title
+                metadata_changed = True
+            authors = header.get("authors")
+            if authors:
+                metadata["authors"] = authors
+                metadata_changed = True
+
+        if metadata_changed:
             parsed = ParsedDocument(
                 source_path=parsed.source_path,
                 is_scanned=parsed.is_scanned,
                 text_pages=parsed.text_pages,
                 images=parsed.images,
-                metadata=merged_md,
+                metadata=metadata,
             )
 
         # Assemble final JSON
